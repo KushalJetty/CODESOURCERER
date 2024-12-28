@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github/controllers/initializers"
-
 	"io"
 	"log"
 	"net/http"
@@ -39,6 +38,7 @@ func WebhookHandler(c *gin.Context) {
 		baseBranch := prEvent["pull_request"].(map[string]interface{})["base"].(map[string]interface{})["ref"].(string)
 
 		if action == "closed" && merged && baseBranch == "testing" {
+
 			log.Printf("Pull request merged into 'testing' branch")
 
 			repoOwner := prEvent["repository"].(map[string]interface{})["owner"].(map[string]interface{})["login"].(string) //require it later
@@ -47,6 +47,13 @@ func WebhookHandler(c *gin.Context) {
 			commitSHA := prEvent["pull_request"].(map[string]interface{})["merge_commit_sha"].(string) //require it later
 
 			mergeID := fmt.Sprintf("merge_%s_%d", commitSHA, pullRequestNumber)
+
+			// TODO: call the function here
+			log.Printf("fetching content from yaml file of repository")
+			err := initializers.FetchAndLogYAMLContents(repoOwner, repoName, commitSHA, "codesourcerer-config.yml")
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
 
 			// Fetch PR description and dependencies
 			prDescription, err := initializers.FetchPullRequestDescription(repoOwner, repoName, pullRequestNumber)
